@@ -1,16 +1,37 @@
-- name : Configure Docker on EC2 Instances
-  hosts : all
-  become: true
-  connection : ssh
-  tasks : 
-  - name: updating apt
-    command : sudo apt-get update
+---
+- name: FinanceMe
+  hosts: app_servers
+  become: yes
 
-  - name : Install Docker
-    command : sudo apt-get install -y docker.io
+  vars:
+    image_name: vishnupriyalnm/bankingdemo
+    image_tag: "1"
+    container_name: banking_demo
+    app_port: "8081"    # <--- NEW PORT
 
-  - name : Start Docker Service
-    command : sudo systemctl start docker
+  tasks:
 
-  - name: Deploy Docker Container
-    command: docker run -itd -p 8084:8081 shubhamkushwah123/finance-me:1.0
+    - name: Ensure Docker is installed
+      package:
+        name: docker.io
+        state: present
+
+    - name: Pull Docker image
+      community.docker.docker_image:
+        name: "{{ image_name }}"
+        tag: "{{ image_tag }}"
+        source: pull
+
+    - name: Stop existing container if running
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: absent
+        force_kill: yes
+
+    - name: Run Docker container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        ports:
+          - "{{ app_port }}:8080"
+        state: started
