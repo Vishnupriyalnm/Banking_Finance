@@ -1,6 +1,6 @@
 ---
 - name: Pull and Deploy Docker Container from Docker Hub
-  hosts: node
+  hosts: all
   become: true
   vars:
     dockerhub_image: "vishnupriyalnm/bankingdemo:1"
